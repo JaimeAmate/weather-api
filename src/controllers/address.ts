@@ -73,7 +73,7 @@ export async function getAddressCoordinates(params: IAddressParams) {
   return null;
 }
 
-export async function addressHandler(req: IAddressRequest, res: Response) {
+export async function handler(req: IAddressRequest, res: Response) {
   const addressCoordinates = await getAddressCoordinates(req.query);
 
   if (addressCoordinates) {

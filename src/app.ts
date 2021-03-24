@@ -4,11 +4,11 @@ import { PORT } from './config/environmentVariables';
 import * as authenticationController from './controllers/authentication';
 import * as validation from './middleware/validation';
 import * as addressController from './controllers/address';
-import * as weatherContoller from './controllers/weather';
-
-import { notifyUsers } from './controllers/notifier';
+import * as weatherController from './controllers/weather';
+import * as scheduleController from './controllers/notificationSchedule';
 
 const app = express();
+app.use(express.json());
 
 connectDatabase();
 
@@ -22,15 +22,28 @@ app.get('/login/github/callback', authenticationController.callbackMethod);
 app.get('/validate-address',
  authenticationController.validateRequest, 
  validation.validateAddressRequest, 
- addressController.addressHandler
+ addressController.handler
 );
 
 app.get('/weather', 
   authenticationController.validateRequest, 
   validation.validateAddressRequest, 
-  weatherContoller.weather
+  weatherController.handler
 );
 
-(async () => {
-  await notifyUsers();
-})();
+app.get('/schedules',
+  authenticationController.validateRequest,
+  scheduleController.getSchedulesHandler
+)
+
+app.post('/schedules/create',
+  authenticationController.validateRequest,
+  validation.validateCreateNotificationScheduleRequest,
+  scheduleController.createScheduleHandler
+);
+
+app.post('/schedules/delete',
+  authenticationController.validateRequest,
+  validation.validateDeleteNotificationScheduleRequest,
+  scheduleController.deleteScheduleHandler
+);

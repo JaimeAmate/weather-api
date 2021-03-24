@@ -75,7 +75,7 @@ export async function getWeather(coordinates: ILocation) {
   return cacheResponse || fetchResponse;
 }
 
-export async function weather(req: IAddressRequest, res: Response) {
+export async function handler(req: IAddressRequest, res: Response) {
   const [userData, addressCoordinates] = await Promise.all([cacheMiddleware.getUser(req.headers['authorization']), getAddressCoordinates(req.query)]);
 
   if (addressCoordinates) {
