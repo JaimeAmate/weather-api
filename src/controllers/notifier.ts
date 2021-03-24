@@ -1,9 +1,12 @@
-import { AddressModel } from '../database/address/model';
 import { getWeather, IForecast } from '../controllers/weather';
 import mailer from '../config/mailer';
 import { MAIL_USERNAME } from '../config/environmentVariables';
+import { getNotificationSchedules, getUserAddresses } from '../middleware/databaseLayer';
+import { INotificationSchedule } from '../database/notificationSchedule/types';
+import { IAddress } from '../database/address/types';
+import { convertUnixTimestampToDate } from '../utils/dateUtils';
 
-function sendEmail(precipitation: Precipitation, userEmail: string) {
+function sendEmail(precipitation: Weather, userEmail: string) {
 
   const mailOptions = {
     from: MAIL_USERNAME,
@@ -15,7 +18,7 @@ function sendEmail(precipitation: Precipitation, userEmail: string) {
   mailer.sendMail(mailOptions);
 }
 
-interface Precipitation {
+interface Weather {
   type: string;
   description: string;
   timestamp: Date;
@@ -23,11 +26,18 @@ interface Precipitation {
 
 const PRECIPITATIONS = ['Rain', 'Snow', 'Clouds'];
 
-function checkForecastPrecipitation(forecast: IForecast): Precipitation | null  {
-  console.log(forecast.weather);
-  const precipitation = forecast.weather.find((weather) => PRECIPITATIONS.includes(weather.main));
+function checkForecast(forecast: IForecast, schedule: INotificationSchedule): Weather | null  {
+  const precipitation = forecast.weather.find((weather) => schedule.precipitationTypes.includes(weather.main));
 
-  if (precipitation) {
+  const forecastDate = convertUnixTimestampToDate(forecast.dt);
+
+  const startRange = convertUnixTimestampToDate(forecast.dt);
+  startRange.setUTCHours(schedule.startRange);
+
+  const endRange = convertUnixTimestampToDate(forecast.dt);
+  endRange.setUTCHours(schedule.endRange);
+
+  if (precipitation && startRange <= forecastDate && forecastDate <= endRange) {
     return {
       type: precipitation.main,
       description: precipitation.description,
@@ -38,18 +48,34 @@ function checkForecastPrecipitation(forecast: IForecast): Precipitation | null  
   return null;
 }
 
-export async function notifyUsers() {
-  const addresses = await AddressModel.find();
+async function checkAddress(address: IAddress, schedule: INotificationSchedule) {
+  // get address weather API response
+  const weatherResponse = await getWeather({ lat: address.lat, lng: address.lng});
+  const userForecasts = [];
 
-  for (const address of addresses) {
-    const weatherResponse = await getWeather({ lat: address.lat, lng: address.lng });
+  // filter relevant hourly forecast
+  for (const forecast of weatherResponse.hourly) {
+    const precipitation = checkForecast(forecast, schedule);
 
-    for (const forecast of weatherResponse.hourly) {
-      const precipitation = checkForecastPrecipitation(forecast);
-
-      if (precipitation) {
-        console.log('DEBUG: ', precipitation);
-      }
+    if (precipitation) {
+      userForecasts.push(precipitation);
     }
+  }
+
+  console.log('FILTERED: ', userForecasts);
+}
+
+export async function notifyUsers() {
+  // get users schedules
+  const schedules = await getNotificationSchedules();
+  console.log('DEBUG: ', schedules);
+  
+
+  for (const schedule of schedules) {
+    // get users stored addresses
+    const addresses = await getUserAddresses(schedule.email);
+
+    checkAddress(addresses[0], schedule);
+    break;
   }
 }

@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import { isArray } from 'node:util';
+import mongoose from 'mongoose';
 import httpCodes from '../utils/httpCodes';
 
 export interface IAddressRequest extends Request {
@@ -150,14 +150,14 @@ export function validateCreateNotificationScheduleRequest (req: ICreateNotificat
   next();
 }
 
-export interface IDeleteNotificationScheduleRequest extends Request{
-  body: {
+export interface IUpdateNotificationScheduleRequest extends ICreateNotificationScheduleRequest {
+  params: {
     id: string
   }
 }
 
-export function validateDeleteNotificationScheduleRequest (req: IDeleteNotificationScheduleRequest, res: Response, next: NextFunction) {
-  const { id } = req.body;
+export function validateUpdateNotificationScheduleRequest (req: IUpdateNotificationScheduleRequest, res: Response, next: NextFunction) {
+  const { id } = req.params;
   
   if (!id) {
     res.status(httpCodes.BAD_REQUEST).send({
@@ -171,6 +171,46 @@ export function validateDeleteNotificationScheduleRequest (req: IDeleteNotificat
       message: 'Invalid id. id must be a string'
     })
   }
+
+  if(!mongoose.Types.ObjectId.isValid(id) ) {
+    res.status(httpCodes.BAD_REQUEST).send({
+      message: 'Invalid id'
+    });
+    return;
+  };
+
+  validateCreateNotificationScheduleRequest(req, res, next)
+}
+
+
+export interface IDeleteNotificationScheduleRequest extends Request {
+  params: {
+    id: string
+  }
+}
+
+export function validateDeleteNotificationScheduleRequest (req: IDeleteNotificationScheduleRequest, res: Response, next: NextFunction) {
+  const { id } = req.params;
+  
+  if (!id) {
+    res.status(httpCodes.BAD_REQUEST).send({
+      message: 'Missing id'
+    });
+    return;
+  }
+
+  if(typeof id !== 'string'){
+    res.status(httpCodes.BAD_REQUEST).send({
+      message: 'Invalid id. id must be a string'
+    })
+  }
+
+  if(!mongoose.Types.ObjectId.isValid(id) ) {
+    res.status(httpCodes.BAD_REQUEST).send({
+      message: 'Invalid id'
+    });
+    return;
+  };
 
   next();
 }

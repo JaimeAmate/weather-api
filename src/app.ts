@@ -6,6 +6,7 @@ import * as validation from './middleware/validation';
 import * as addressController from './controllers/address';
 import * as weatherController from './controllers/weather';
 import * as scheduleController from './controllers/notificationSchedule';
+import { notifyUsers } from './controllers/notifier';
 
 const app = express();
 app.use(express.json());
@@ -42,8 +43,18 @@ app.post('/schedules/create',
   scheduleController.createScheduleHandler
 );
 
-app.post('/schedules/delete',
+app.put('/schedules/update/:id',
+  authenticationController.validateRequest,
+  validation.validateUpdateNotificationScheduleRequest,
+  scheduleController.updateScheduleHandler
+);
+
+app.delete('/schedules/delete/:id',
   authenticationController.validateRequest,
   validation.validateDeleteNotificationScheduleRequest,
   scheduleController.deleteScheduleHandler
 );
+
+app.get('/notify',
+  notifyUsers
+)
