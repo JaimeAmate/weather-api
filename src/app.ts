@@ -6,7 +6,8 @@ import * as validation from './middleware/validation';
 import * as addressController from './controllers/address';
 import * as weatherController from './controllers/weather';
 import * as scheduleController from './controllers/notificationSchedule';
-import { notifyUsers } from './controllers/notifier';
+import { checkUserSchedules } from './controllers/notifier';
+import cron from 'node-cron';
 
 const app = express();
 app.use(express.json());
@@ -55,6 +56,7 @@ app.delete('/schedules/delete/:id',
   scheduleController.deleteScheduleHandler
 );
 
-app.get('/notify',
-  notifyUsers
-)
+cron.schedule('*/10 * * * *', function() {
+  console.log('Checking users notifications');
+  checkUserSchedules();
+});
