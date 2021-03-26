@@ -1,5 +1,5 @@
 import { IAddress } from '../database/address/types';
-import { INotificationSchedule, INotificationScheduleDocument } from '../database/notificationSchedule/types';
+import { INotificationSchedule } from '../database/notificationSchedule/types';
 import { NotificationScheduleModel } from '../database/notificationSchedule/model';
 import { AddressModel } from '../database/address/model';
 

@@ -40,7 +40,7 @@ export async function createScheduleHandler(req: ICreateNotificationScheduleRequ
   
   if(object) {
     res.send({
-      'message': 'Schedule Succesfully created'
+      'message': 'Schedule succesfully created'
     });
     return;
   }

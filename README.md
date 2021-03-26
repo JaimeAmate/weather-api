@@ -1,8 +1,8 @@
 # Weather-API  ✨
 
-Weather-API is a REST API that allows the user to validate addresses and fetch the weather of a certain address. It also lets the user to choose notification timeframes with the precipitation types chosen (Clouds, Rain, Snow...).
+Weather-API is a REST API that allows the user to validate addresses and fetch the weather of a certain address. It also lets the user choose notification timeframes with the chosen precipitation types (Clouds, Rain, Snow...).
 
-The application was developed using Node.js/Typescript as the Backend framework.
+The application was developed using Node.js/Typescript and Express as the Backend framework.
 
 ## How to execute
 ```bash
@@ -17,9 +17,11 @@ foo@bar:~$ docker-compose up
 - Redis (Cache layer)
 - Node.js server (API)
 
+All the needed services are dockerized. See `docker-compose.yml`
+
 ## Github OAuth flow
 
-API authentication relies on the Github OAuth server. To get an access token the user must call the login API endpoint from the browser and go through the consent page. Once the user Github credentials have been validated, the user should see the access token
+API authentication relies on the Github OAuth server. In order to get an access token the user must call the login API endpoint from the browser and go through the consent page successfully. Once the user's Github credentials have been validated, a authentication code will be exchanged for an access token. The user will be able to see an access token in the browser page. 
 
 ```sh
 localhost:3000/login/github
@@ -28,23 +30,41 @@ localhost:3000/login/github
 }
 ```
 
-This access token must be included in every API request inside the Authorization header, if the Authorization header is missing or and invalid/expired access token is provided the API returns a 401 Unathorized status code.
+This access token must be included in every API request inside the Authorization header, if the Authorization header is missing or an invalid/expired access token is provided the API returns a `401 Unathorized` status code.
 
 ## Cache Layer
 
 The Redis database is used for:
 
-- Cache All the usages of external services for 12 hours. 
-- Cache accces tokens and user data for 10 hours.
-- Token validation.
+- Cache all the usages of external services with a TTL of 12 hours. 
+- Cache accces tokens and user data with a TTL of 10 hours.
+- Token validation. The cache layer validates incoming requests if the provided access token is stored.
 
 ## Database Layer
 
-The Mongo DB database is used for storing queried addresses and user notification schedules.
+The MongoDB database is used for storing queried addresses and user notification schedules.
 
 ## API
 
 #### /login/github `GET`
+
+Redirects to Github consent page. If Github authentication is succesfull, the page triggers the callback function sending an Authorization code.
+
+### /login/github/callback `GET`
+
+Exchanges Authorization code for access token
+
+#### Response sample
+```
+{
+    access_token: XXXXXXXXXXXXX   
+}
+```
+
+#### Url Params
+**Required:**
+`code=[string]`
+
 #### /validate-address `GET`
 Receives an address object, validate if the address exists and return the coordinates.
 
@@ -129,8 +149,8 @@ Creates a notification timeframe.
 **Required:**
    `start_range=[string]`
    `end_range=[integer]`
-**Optional.**
-`precipitation_types=array[string]`
+**Optional:**
+    `precipitation_types=array[string]`
 
 ### Request sample
 ```bash
@@ -202,5 +222,16 @@ DELETE http://localhost:3000/schedules/delete/605b77945dea6605e6f7524d ---header
 ## User nofifications
 
 The Node.js server implements a cron-job that check user notifications every 10 minutes.
+
+### Notification mail sample
+```
+Hi! amate97@gmail.com. You are receiving this alert from 10 to 11 for the following precipitations: Clouds
+
+Arabial 5, Granada 18003: [{"type":"Clouds","description":"few clouds","timestamp":"2021-03-25T11:00:00.000Z"},{"type":"Clouds","description":"overcast clouds","timestamp":"2021-03-26T10:00:00.000Z"},{"type":"Clouds","description":"overcast clouds","timestamp":"2021-03-26T11:00:00.000Z"}]
+
+Gran vía 5, Barcelona 18003: [{"type":"Clouds","description":"scattered clouds","timestamp":"2021-03-25T10:00:00.000Z"},{"type":"Clouds","description":"scattered clouds","timestamp":"2021-03-25T11:00:00.000Z"},{"type":"Clouds","description":"broken clouds","timestamp":"2021-03-26T10:00:00.000Z"},{"type":"Clouds","description":"broken clouds","timestamp":"2021-03-26T11:00:00.000Z"}]
+
+Kiwittsmoor 36, Hamburg 22417: [{"type":"Clouds","description":"broken clouds","timestamp":"2021-03-25T10:00:00.000Z"},{"type":"Clouds","description":"broken clouds","timestamp":"2021-03-25T11:00:00.000Z"},{"type":"Clouds","description":"few clouds","timestamp":"2021-03-26T10:00:00.000Z"},{"type":"Clouds","description":"few clouds","timestamp":"2021-03-26T11:00:00.000Z"}]
+```
 
 > Note: The user must create a notification schedule in order to receive mails. 

@@ -1,7 +1,7 @@
 import { getWeather, IForecast } from '../controllers/weather';
 import mailer from '../config/mailer';
 import { MAIL_USERNAME } from '../config/environmentVariables';
-import { getNotificationSchedules, getUserAddresses } from '../middleware/databaseLayer';
+import { getNotificationSchedules, getUserAddresses } from './databaseLayer';
 import { INotificationSchedule } from '../database/notificationSchedule/types';
 import { IAddress } from '../database/address/types';
 import { convertUnixTimestampToDate } from '../utils/dateUtils';
@@ -45,7 +45,7 @@ function checkForecast(forecast: IForecast, schedule: INotificationSchedule): IW
     return {
       type: precipitation.main,
       description: precipitation.description,
-      timestamp: new Date(forecast.dt * 1000),
+      timestamp: convertUnixTimestampToDate(forecast.dt),
     };
   }
 

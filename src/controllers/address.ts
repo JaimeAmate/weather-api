@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from 'express';
+import { Response } from 'express';
 import axios from 'axios';
 import * as cacheMiddleware from '../middleware/cacheLayer';
 import { IAddressRequest } from '../middleware/validation';
