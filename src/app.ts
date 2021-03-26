@@ -6,7 +6,7 @@ import * as validation from './middleware/validation';
 import * as addressController from './controllers/address';
 import * as weatherController from './controllers/weather';
 import * as scheduleController from './controllers/notificationSchedule';
-import { checkUserSchedules } from './controllers/notifier';
+import { checkUserSchedules } from './middleware/notifier';
 import cron from 'node-cron';
 
 const app = express();
